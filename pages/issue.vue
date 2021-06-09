@@ -11,16 +11,20 @@
     <v-text-field
       v-model="legalName"
       hint="The legalName that is going to be issued"
-      label="Organization Name">
-    </v-text-field>
+      label="Organization Name"
+    />
     <v-text-field
       v-model="holder"
       hint="e.g. http://localhost/user1"
-      label="Holder / Receiver / Subject ID">
-    </v-text-field>
-    <v-btn @click="createVC()">Create</v-btn>
-    <br/><br/>
-    <v-btn alt small @click="copyToClipboard()" v-if="credential"><v-icon>mdi-content-copy</v-icon></v-btn><pre>{{credential}}</pre>
+      label="Holder / Receiver / Subject ID"
+    />
+    <v-btn @click="createVC()">
+      Create
+    </v-btn>
+    <br><br>
+    <v-btn v-if="credential" alt small @click="copyToClipboard()">
+      <v-icon>mdi-content-copy</v-icon>
+    </v-btn><pre>{{ credential }}</pre>
   </div>
 </template>
 
@@ -44,16 +48,68 @@ export default {
         const credential = {
           '@context': [
             'https://www.w3.org/2018/credentials/v1',
-            'https://w3id.org/traceability/v1'
+            'https://schema.org/docs/jsonldcontext.jsonld',
+            {
+              '@version': 1.1,
+              '@protected': true,
+              id4me: 'https://id4me.org/definitions#',
+              testing: {
+                '@id': 'id4me:testing',
+                '@type': 'xsd:string'
+              },
+              IDAuthorityCredential: 'id4me:IDAuthorityCredential',
+              isIDAuthority: {
+                '@id': 'id4me:isIDAuthority',
+                '@context': {
+                  '@protected': true,
+                  operationalCountry: {
+                    '@id': 'id4me:operationalCountry',
+                    '@type': 'http://schema.org/addressCountry'
+                  },
+                  operationalJurisdiction: {
+                    '@id': 'id4me:operationalJurisdiction',
+                    '@type': 'http://schema.org/addressCountry'
+                  },
+                  privacyFrameworks: {
+                    '@id': 'id4me:privacyFrameworks',
+                    '@type': 'id4me:privacyFrameworks'
+                  },
+                  operatorType: {
+                    '@id': 'id4me:operatorType',
+                    '@type': 'id4me:operatorType'
+                  },
+                  trustLevel: {
+                    '@id': 'id4me:trustLevel',
+                    '@type': 'id4me:trustLevel'
+                  }
+                }
+              }
+            }
           ],
           id: new Date().getTime().toString(),
-          type: ['VerifiableCredential'],
+          type: ['VerifiableCredential', 'IDAuthorityCredential'],
           issuer: this.$store.state.keyPair.controller,
-          issuanceDate: '2010-01-01T19:23:24Z',
+          issuanceDate: new Date().toISOString(),
           credentialSubject: {
-            id: this.holder,
-            type: ['LEIentity'],
-            legalName: this.legalName
+            type: 'Organization',
+            name: this.legalName,
+            legalName: this.legalName,
+            address: {
+              type: 'PostalAddress',
+              streetAddress: '123 Main St.',
+              addressLocality: 'Berlin',
+              postalCode: '24060',
+              addressCountry: 'DE'
+            },
+            isIDAuthority: {
+              operatorType: 'IDAuthority',
+              operationalCountry: 'DE',
+              operationalJurisdiction: 'DE',
+              privacyFrameworks: [
+                'gdpr'
+              ],
+              trustLevel: 'id4me_otl_member'
+            }
           }
         }
         console.log('credential', credential)

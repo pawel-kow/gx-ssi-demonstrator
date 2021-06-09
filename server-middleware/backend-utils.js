@@ -34,8 +34,16 @@ const getNewUserId = function() {
   if(fs.existsSync(userdir)) {
     return getNewUserId() // recursively try to find a non-existing userid
   }
-  fs.mkdirSync(userdir, { recursive: true })
-  return id
+  console.log("Creating directory:", userdir);
+  fs.mkdirSync(userdir, { recursive: true }, (err) => {
+      if (err) {
+        console.log("error occurred in creating new directory", err);
+        return;
+      }
+    }
+  );
+  console.log("New directory created successfully");
+  return id;
 }
 
 const buildDidWebFromUrl = function (userUrl) {
@@ -50,6 +58,7 @@ const buildDidWebFromUrl = function (userUrl) {
   }
   return didweb
 }
+
 const buildDidWebFromId = function (userId) {
   const userUrl = buildUserUrl(userId)
   return buildDidWebFromUrl(userUrl)

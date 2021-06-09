@@ -7,5 +7,31 @@ services:
     restart: always
     ports:
       - "7600:3000"
+    volumes:
+      - ./assets:/app/assets
+      - ./layouts:/app/layouts
+      - ./pages:/app/pages
+      - ./server-middleware:/app/server-middleware
+      - ./store:/app/store
+      - ./tests:/app/tests
+      - ./package.json:/app/package.json
+      - ./jsconfig.json:/app/jsconfig.json
     environment:
-      - SERVER_BASE_URL=${SERVER_BASE_URL:-http://localhost:3000/api}
+      - SERVER_BASE_URL=${SERVER_BASE_URL:-http://holder.localhost:7600/api}
+  gx-ssi-demonstrator2:
+    build: .
+    image: gx-ssi-demonstrator:latest
+    restart: always
+    ports:
+      - "7700:3000"
+    volumes:
+      - ./assets:/app/assets
+      - ./layouts:/app/layouts
+      - ./pages:/app/pages
+      - ./server-middleware:/app/server-middleware
+      - ./store:/app/store
+      - ./tests:/app/tests
+      - ./package.json:/app/package.json
+      - ./jsconfig.json:/app/jsconfig.json
+    environment:
+      - SERVER_BASE_URL=${SERVER_BASE_URL:-http://verifier.localhost:7700/api}

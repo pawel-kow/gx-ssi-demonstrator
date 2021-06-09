@@ -22,22 +22,34 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: false }
 }))
+
 app.use(bodyParser.json())
+
+// Add headers
+app.use(function (req, res, next) {
+  // Website you wish to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', '*')
+
+  // Pass to next layer of middleware
+  next()
+})
 
 app.post('/vc', (req, res) => {
   console.log('post vc')
-  return res.json({error: 'not implemented yet'})
+  return res.json({ error: 'not implemented yet' })
 })
+
 app.get('/vc/:id', (req, res) => {
   // only fetch from session id storage!
   console.log('not implemented yet')
-  return res.json({error: 'not implemented yet'})
+  return res.json({ error: 'not implemented yet' })
 })
 
 app.get('/userinfo', (req, res) => {
+  console.log('User info')
   // get userinfo from the session or creates a new one
   let userid = req.session.userid
-  if(! userid) {
+  if (!userid) {
     userid = utils.getNewUserId()
     req.session.userid = userid
   }
@@ -61,8 +73,10 @@ app.get('/user/:userid', (req, res) => {
   }
   return res.json(result)
 })
+
 app.post('/user/key', (req, res) => {
   // update the public key for the user of this session
+  console.log('Create user key...')
   const userid = req.session.userid
   if (!userid) {
     return res.status(401).json({ error: 'You need to fetch / generate a userinfo first. (No userid in your session yet)' })
@@ -79,27 +93,31 @@ app.post('/user/key', (req, res) => {
   // additional fields are not checked, which means those are allowd for now
   const newKeyObj = req.body
   const pubKeyFile = path.join(utils.USER_BASE_DIR, userid, utils.PUB_KEY_FILENAME)
+  console.log('Writing public key to: ', pubKeyFile)
   fs.writeFileSync(pubKeyFile, JSON.stringify(newKeyObj, null, 4))
 
   // and now the did:web document if we have a did defined
   if (userinfo.did) {
     const diddoc = didutils.buildDidDocument(userinfo.did, newKeyObj.publicKeyBase58, newKeyObj.type)
     const didwebDocFile = path.join(utils.USER_BASE_DIR, userid, utils.DID_WEB_DOC_FILENAME)
+    console.log('Writing web DID Doc: ', didwebDocFile)
     fs.writeFileSync(didwebDocFile, JSON.stringify(diddoc, null, 4))
   }
 
   res.json({})
 })
+
 app.get('/user/:userid/key', (req, res) => {
   // fetch the public key for the user
   const userid = req.params.userid
   const keyFilePath = path.join(utils.USER_BASE_DIR, userid, utils.PUB_KEY_FILENAME)
-  if(!fs.existsSync(keyFilePath)) {
+  if (!fs.existsSync(keyFilePath)) {
     return res.status(404).json({ error: 'User or key file for user does not exist' })
   }
   const pubKey = JSON.parse(fs.readFileSync(keyFilePath))
   return res.json(pubKey)
 })
+
 app.get('/user/:userid/did.json', (req, res) => {
   const userid = req.params.userid
   const diddocFilePath = path.join(utils.USER_BASE_DIR, userid, utils.DID_WEB_DOC_FILENAME)
@@ -123,17 +141,17 @@ app.post('/user/selfdescription', (req, res) => {
   fs.writeFileSync(sdPath, JSON.stringify(sd, null, 4))
   return res.json({ selfdescription: userinfo.selfdescription })
 })
+
 app.get('/user/:userid/selfdescription', (req, res) => {
   // fetch the publicly avilable selfdescription for the given userid
   const userid = req.params.userid
   const sdFilePath = path.join(utils.USER_BASE_DIR, userid, utils.SELF_DESCRIPTION_FILENAME)
-  if(!fs.existsSync(sdFilePath)) {
-    return res.status(404).json({error: 'Self-Description for the given user does not exist'})
+  if (!fs.existsSync(sdFilePath)) {
+    return res.status(404).json({ error: 'Self-Description for the given user does not exist' })
   }
   const sd = JSON.parse(fs.readFileSync(sdFilePath))
   return res.json(sd)
 })
-
 
 const initServer = function () {
   console.log('server started.')
